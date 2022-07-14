@@ -9,9 +9,9 @@ xquery version "3.1";
 Declare namespaces
 ==:)
 declare namespace hoax = "http://obdurodon.org/hoax";
-declare namespace hoax-model = "http://www.obdurodon.org/model";
+declare namespace m = "http://www.obdurodon.org/model";
 declare namespace tei = "http://www.tei-c.org/ns/1.0";
-
+declare namespace html="http://www.w3.org/1999/xhtml";
 (:===
 Declare global variables to path
 ===:)
@@ -25,16 +25,37 @@ declare variable $path-to-data as xs:string :=
 Declare variable
 ===:)
 declare variable $articles-coll := collection($path-to-data || '/hoax_xml');
-declare variable $articles as element(tei:listPlace)+ := $articles-coll/tei:listPlace;
+declare variable $articles as element(tei:TEI)+ := $articles-coll/tei:TEI;
 
-<hoax-model:titles> 
+(:===
+Instead of using a controller to connect the pieces of the pipeline,
+we'll declare a variable to hold that data, and then we'll pipe that into
+our view code. The view code is an HTML section (see above, we added the HTML
+namespace in line 14.
+
+You can test this by going to http://localhost:8080/exist/apps/02-titles-no-controller/modules/titles.xql)
+===:)
+
+
+declare variable $data as element(m:titles) :=
+<m:titles> 
 {
     for $article in $articles 
     return
-        <hoax-model:title>
+        <m:title>
         { 
             $article//tei:titleStmt/tei:title ! fn:string(.)
         }
-        </hoax-model:title>
+        </m:title>
 }
-</hoax-model:titles>
+</m:titles>;
+
+<html:section>
+  <html:ul>
+{ 
+    for $title in $data/m:title
+    return
+    <html:li>{$title ! string(.)}</html:li>
+}
+  </html:ul>
+</html:section>
